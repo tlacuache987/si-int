@@ -1,9 +1,9 @@
-package com.example.intertech.lab3;
+package com.example.intertech.lab3.filters;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class Lab3_b_App {
+public class Lab3_c_App {
 
 	public static void main(String[] args) {
 
