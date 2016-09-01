@@ -1,13 +1,13 @@
-package com.example.intertech.lab2;
+package com.example.intertech.lab1.channels;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class Lab2_a_App {
+public class Lab1_a_App {
 
 	public static void main(String[] args) {
 
-		String src = "spring/lab2/si-file-inbound-outbound-adapter.xml";
+		String src = "spring/lab1/si-publish-subscribe-channel.xml";
 
 		ApplicationContext ctx = new ClassPathXmlApplicationContext(src);
 

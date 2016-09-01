@@ -1,4 +1,4 @@
-package com.example.intertech.lab1;
+package com.example.intertech.lab1.channels;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

@@ -1,13 +1,13 @@
-package com.example.intertech.lab1;
+package com.example.intertech.lab3;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class Lab1_a_App {
+public class Lab3_a_App {
 
 	public static void main(String[] args) {
 
-		String src = "spring/lab1/si-publish-subscribe-channel.xml";
+		String src = "spring/lab3/si-file-filter.xml";
 
 		ApplicationContext ctx = new ClassPathXmlApplicationContext(src);
 

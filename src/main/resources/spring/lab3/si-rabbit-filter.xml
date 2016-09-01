@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-file="http://www.springframework.org/schema/integration/file"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-4.3.xsd
+		http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp-4.3.xsd
+		http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file-4.3.xsd
+		http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit-1.6.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.3.xsd">
+
+	<!-- From stdin To RabbitMQ -->
+
+	<!-- <int-stream:stdin-channel-adapter id="console-in-channel-adapter" channel="to-rabbit-channel"> 
+		<int:poller fixed-delay="1000" max-messages-per-poll="1" /> </int-stream:stdin-channel-adapter> -->
+
+	<int:channel id="to-rabbit-channel" />
+
+	<int-amqp:outbound-channel-adapter
+		channel="to-rabbit-channel" amqp-template="amqpTemplate"
+		exchange-name="si.test.exchange" routing-key="si.test.binding" />
+
+
+	<!-- From RabbitMQ To STDOUT -->
+
+	<int-amqp:inbound-channel-adapter
+		channel="from-rabbit-channel" queue-names="si.test.queue"
+		connection-factory="connectionFactory" />
+
+	<int:channel id="from-rabbit-channel" />
+	<!-- <int:interceptors> <int:wire-tap channel="loggingChannel" /> </int:interceptors> 
+		</int:channel> -->
+
+	<!-- <int:logging-channel-adapter id="loggingChannel" log-full-message="true" 
+		logger-name="tapInbound" level="INFO" /> -->
+
+	<int:transformer input-channel="from-rabbit-channel"
+		output-channel="console-out-channel-adapter" expression="'Received: ' + payload" />
+
+	<int-stream:stdout-channel-adapter
+		id="console-out-channel-adapter" append-newline="true" />
+
+
+
+
+
+	<!-- RabbitMQ infraestructure -->
+
+	<rabbit:connection-factory id="connectionFactory"
+		host="localhost" />
+
+	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
+
+	<rabbit:admin connection-factory="connectionFactory" />
+
+	<rabbit:queue name="si.test.queue" />
+
+	<rabbit:direct-exchange name="si.test.exchange">
+		<rabbit:bindings>
+			<rabbit:binding queue="si.test.queue" key="si.test.binding" />
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+
+</beans>
