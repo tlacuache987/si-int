@@ -49,7 +49,7 @@
 	</bean>
 
 
-	<!-- Publish - subscribe chanel -->
+	<!-- Publish - subscribe channel -->
 	<int:publish-subscribe-channel id="outboundChannel" />
 
 
