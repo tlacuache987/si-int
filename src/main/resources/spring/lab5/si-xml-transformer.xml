@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-file="http://www.springframework.org/schema/integration/file"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-4.3.xsd
+		http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file-4.3.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.3.xsd">
+
+	<!-- inbound file channel adapter -->
+	<int-file:inbound-channel-adapter id="producer-file-adapter"
+		channel="inboundChannel" directory="C:/inbound-xml-adapter"
+		prevent-duplicates="true">
+		<int:poller fixed-rate="200" />
+	</int-file:inbound-channel-adapter>
+
+	<!-- Direct channel -->
+	<int:channel id="inboundChannel" />
+
+	<!-- ile to String Transformer -->
+	<int-file:file-to-string-transformer
+		id="file-to-string-transformer" input-channel="inboundChannel"
+		output-channel="xml-inboundChannel" charset="UTF-8" />
+
+	<!-- Direct channel -->
+	<int:channel id="xml-inboundChannel" />
+
+	<int-xml:unmarshalling-transformer
+		id="xml-to-object-transformer" unmarshaller="jaxbMarshaller"
+		input-channel="xml-inboundChannel" output-channel="outboundChannel" />
+
+	<!-- Unmarshaller -->
+	<bean id="jaxbMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="packagesToScan"
+			value="com.example.intertech.lab5.transformers.schemas" />
+	</bean>
+
+
+	<!-- Publish - subscribe chanel -->
+	<int:publish-subscribe-channel id="outboundChannel" />
+
+
+	<!-- Defining Service Activator -->
+	<int:service-activator id="printer-service-activator"
+		input-channel="outboundChannel" ref="printerServiceActivator" method="voidPrintShiporder" />
+
+	<!-- Printer Service Activator definition -->
+	<bean id="printerServiceActivator"
+		class="com.example.intertech.lab5.transformers.serviceactivator.PrinterServiceActivator" />
+
+
+	<!-- outbound stream channel adapter -->
+	<int-stream:stdout-channel-adapter
+		id="console-out-channel-adapter" channel="outboundChannel" />
+
+
+	<!-- Default poller -->
+	<int:poller id="defaultPoller" default="true"
+		max-messages-per-poll="5" fixed-rate="200" />
+
+</beans>

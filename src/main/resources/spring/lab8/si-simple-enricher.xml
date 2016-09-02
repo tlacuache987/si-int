@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-file="http://www.springframework.org/schema/integration/file"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-4.3.xsd
+		http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file-4.3.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<!-- inbound file channel adapter -->
+	<int-file:inbound-channel-adapter id="inbound-file-channel-adapter"
+		directory="C:/inbound-xml-adapter" prevent-duplicates="true" channel="inboundChannel">
+		<int:poller fixed-rate="200" />
+	</int-file:inbound-channel-adapter>
+
+
+	<!-- Direct channel -->
+	<int:channel id="inboundChannel" />
+
+
+	<!-- file to string transformer -->
+	<int-file:file-to-string-transformer
+		id="file-to-string-transformer" input-channel="inboundChannel"
+		output-channel="xml-inboundChannel" charset="UTF-8" />
+
+	<!-- Direct channel -->
+	<int:channel id="xml-inboundChannel" />
+
+
+	<!-- logger -->
+	<int:logging-channel-adapter id="global-logger-channel-adapter"
+		level="INFO" expression="payload" />
+
+
+	<!-- Norway XML transformer channel -->
+	<int-xml:unmarshalling-transformer
+		id="xml-to-object-transformer" unmarshaller="jaxbMarshaller"
+		input-channel="xml-inboundChannel" output-channel="object-inboundChannel" />
+
+	<!-- Unmarshaller -->
+	<bean id="jaxbMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="packagesToScan" value="com.example.intertech.lab7.enrichers.schemas" />
+		<property name="marshallerProperties">
+			<map>
+				<entry>
+					<key>
+						<util:constant static-field="javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT" />
+					</key>
+					<value type="java.lang.Boolean">true</value>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<!-- Direct channel -->
+	<int:channel id="object-inboundChannel" />
+
+
+	<!-- Enricher -->
+	<int:enricher id="shiporder-enricher" input-channel="object-inboundChannel"
+		output-channel="header-enricher-channel">
+		<int:property name="shipped" expression="true" />
+	</int:enricher>
+
+
+	<!-- Direct channel -->
+	<int:channel id="header-enricher-channel" />
+
+
+	<!-- Enricher -->
+	<int:header-enricher id="shiporder-header-enricher"
+		input-channel="header-enricher-channel" output-channel="object-to-xml-channel">
+		<int:header name="shipped-code" value="123" />
+	</int:header-enricher>
+
+
+	<!-- Direct channel -->
+	<int:channel id="object-to-xml-channel">
+		<int:interceptors>
+			<int:wire-tap channel="logger-channel-adapter" />
+			<int:wire-tap channel="logger-channel-adapter2" />
+		</int:interceptors>
+	</int:channel>
+
+	<!-- logger -->
+	<int:logging-channel-adapter id="logger-channel-adapter"
+		level="INFO"
+		expression="'Order id: ' + payload.orderid + ', shipped: ' + payload.shipped" />
+
+	<!-- logger -->
+	<int:logging-channel-adapter id="logger-channel-adapter2"
+		level="INFO" expression="'headers: ' + headers" />
+
+
+
+	<!-- Marshalling norway transformer -->
+	<int-xml:marshalling-transformer id="object-to-xml-transformer"
+		marshaller="jaxbMarshaller" input-channel="object-to-xml-channel"
+		output-channel="outboundChannel" result-transformer="resultTransformer" />
+
+	<!-- result transformer -->
+	<bean id="resultTransformer"
+		class="org.springframework.integration.xml.transformer.ResultToStringTransformer">
+		<property name="outputProperties">
+			<props>
+				<prop key="indent">yes</prop>
+				<prop key="{http://xml.apache.org/xslt}indent-amount">2</prop>
+			</props>
+		</property>
+	</bean>
+
+
+	<!-- Direct channel -->
+	<int:channel id="outboundChannel">
+		<int:interceptors>
+			<int:wire-tap channel="global-logger-channel-adapter" />
+		</int:interceptors>
+	</int:channel>
+
+
+
+	<!-- outbound file channel adapter -->
+	<int-file:outbound-channel-adapter
+		id="outbound-file-channel-adapter" channel="outboundChannel"
+		append-new-line="true" directory="C:/outbound-xml-adapter" />
+
+
+	<!-- Default poller -->
+	<int:poller id="defaultPoller" default="true"
+		max-messages-per-poll="5" fixed-rate="200" />
+
+</beans>

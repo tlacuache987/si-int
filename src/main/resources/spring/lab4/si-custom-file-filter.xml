@@ -10,20 +10,34 @@
 
 	<!-- inbound file channel adapter -->
 	<int-file:inbound-channel-adapter id="producer-file-adapter"
-		channel="messageChannel" directory="C:/inbound-file-adapter"
+		channel="inboundChannel" directory="C:/inbound-file-adapter"
 		prevent-duplicates="true">
+
 		<int:poller fixed-rate="200" />
+
 	</int-file:inbound-channel-adapter>
+
+	<!-- Direct channel -->
+	<int:channel id="inboundChannel" />
+
+
+	<!-- FileSelector bean -->
+	<bean id="fileSelector"
+		class="com.example.intertech.lab4.filters.messageselector.FileSelector" />
+
+	<!-- Filter -->
+	<int:filter input-channel="inboundChannel" output-channel="outboundChannel"
+		ref="fileSelector" />
+
+	<!-- Direct channel -->
+	<int:channel id="outboundChannel" />
+
+	<!-- outbound file channel adapter -->
+	<int-file:outbound-channel-adapter
+		id="consumer-file-adapter" channel="outboundChannel" directory="C:/outbound-file-adapter" />
 
 	<!-- Default poller -->
 	<int:poller id="defaultPoller" default="true"
 		max-messages-per-poll="5" fixed-rate="200" />
-
-	<!-- Direct chanel -->
-	<int:channel id="messageChannel" />
-
-	<!-- outbound file channel adapter -->
-	<int-file:outbound-channel-adapter
-		id="consumer-file-adapter" channel="messageChannel" directory="C:/outbound-file-adapter" />
 
 </beans>
