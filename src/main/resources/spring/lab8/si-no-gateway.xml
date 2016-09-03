@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-file="http://www.springframework.org/schema/integration/file"
+	xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream-4.3.xsd
+		http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/integration/file http://www.springframework.org/schema/integration/file/spring-integration-file-4.3.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+
+	<!-- Direct chanel -->
+	<int:channel id="inboundChannel" />
+
+
+	<!-- Pig Latin Transformer -->
+	<int:transformer id="pig-latin-transformer" ref="pigLatinTransformer"
+		method="toPigLatin" input-channel="inboundChannel" output-channel="outboundChannel" />
+
+	<!-- bean pigLatinTransformer -->
+	<bean id="pigLatinTransformer"
+		class="com.example.intertech.lab8.gateways.transformer.PigLatinTransformer" />
+
+
+	<!-- Direct chanel -->
+	<int:channel id="outboundChannel">
+		<int:queue capacity="1" />
+	</int:channel>
+
+
+</beans>
